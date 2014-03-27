@@ -1,27 +1,24 @@
+exports.index = function(course) {
+  return function(req, res) {
+    var names = decodeURIComponent(req.url).substr(1).split('/');
 
-/*
- * GET home page.
- */
-
-exports.index = function(course){
-  return function(req, res){
-    url = req.url;
-
-    if (url.charAt(url.length - 1) == '/') {
-      if (url.length > 1) {
-        id = url.substr(1, url.length - 2);
-      } else {
-        id = null;
-      }
-      course.find({parent: id}, {}, function(e, list) {
-        res.render('index', {
-          'list': list
+    var query = function(p, name) {
+      if (name) {
+        course.findOne({parent: p, name: name}).on('success', function(doc) {
+          query(doc._id, names.shift());
         });
-      });
+      } else {
+        course.find({parent: p}, {}, function(e, list) {
+          res.render('index', {'list': list});
+        });
+      }
+    };
+
+    if (!names[names.length - 1]) {
+      query(null, names.shift());
     } else {
-      root = url.split('/')[0]
-      res.render('index', {
-        'url': url
+      course.findOne({parent: null, name: names[0]}).on('success', function(doc) {
+        res.redirect(doc.url + names.join('/'));
       });
     }
   };

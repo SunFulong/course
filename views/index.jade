@@ -1,11 +1,13 @@
 doctype html
-ul
-  if list
+if list
+  ul
+    li
+      a(href='../')= '../'
     each item in list
       li
-        if !item.type
+        unless item.type
           a(href='#{item.name}/')= item.name + '/'
         else
           a(href='#{item.name}')= item.name
-  else
-   = url
+else
+  = url
