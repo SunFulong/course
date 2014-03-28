@@ -8,7 +8,7 @@ exports.index = function(course) {
           query(doc._id, names.shift());
         });
       } else {
-        course.find({parent: p}, {}, function(e, list) {
+        course.find({parent: p}, {'sort': ['type', 'name']}).on('success', function(list) {
           res.render('index', {'list': list});
         });
       }
