@@ -1,25 +1,33 @@
-exports.index = function(course) {
-  return function(req, res) {
-    var names = decodeURIComponent(req.url).substr(1).split('/');
+exports.index = function (course) {
+  return function (req, res) {
+    var names = decodeURIComponent(req.url).substr(1).split('/'),
+      rootUrl,
 
-    var query = function(p, name) {
-      if (name) {
-        course.findOne({parent: p, name: name}).on('success', function(doc) {
-          query(doc._id, names.shift());
-        });
-      } else {
-        course.find({parent: p}, {'sort': ['type', 'name']}).on('success', function(list) {
-          res.render('index', {'list': list});
-        });
-      }
-    };
+      query = function (p, name) {
+        if (name) {
+          course.findOne({parent: p, name: name}).on('success', function (doc) {
+            if (!doc) {
+              res.status(404);
+              res.send('404 Not Found');
 
-    if (!names[names.length - 1]) {
-      query(null, names.shift());
-    } else {
-      course.findOne({parent: null, name: names[0]}).on('success', function(doc) {
-        res.redirect(doc.url + names.join('/'));
-      });
-    }
+              return;
+            }
+
+            rootUrl = p ? rootUrl : doc.url;
+
+            if (!doc.type) {
+              query(doc._id, names.shift());
+            } else {
+              res.redirect(rootUrl + req.url.substr(1));
+            }
+          });
+        } else {
+          course.find({parent: p}, {'sort': ['type', 'name']}).on('success', function (list) {
+            res.render('index', {'list': list});
+          });
+        }
+      };
+
+    query(null, names.shift());
   };
 };
