@@ -4,7 +4,11 @@ exports.index = function (course) {
       rootUrl,
 
       query = function (p, name) {
-        if (name) {
+        if (!name) {
+          course.find({parent: p}, {'sort': ['type', 'name']}).on('success', function (list) {
+            res.render('index', {'list': list});
+          });
+        } else {
           course.findOne({parent: p, name: name}).on('success', function (doc) {
             if (!doc) {
               res.status(404);
@@ -13,17 +17,14 @@ exports.index = function (course) {
               return;
             }
 
-            rootUrl = p ? rootUrl : doc.url;
-
+            if (!p) {
+              rootUrl = doc.url;
+            }
             if (!doc.type) {
               query(doc._id, names.shift());
             } else {
               res.redirect(rootUrl + req.url.substr(1));
             }
-          });
-        } else {
-          course.find({parent: p}, {'sort': ['type', 'name']}).on('success', function (list) {
-            res.render('index', {'list': list});
           });
         }
       };
