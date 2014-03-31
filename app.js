@@ -33,7 +33,8 @@ if ('development' == app.get('env')) {
   app.use(express.errorHandler());
 }
 
-app.all('*', routes.index(db.get('course')));
+app.post('/search.course', routes.search(db.get('course')));
+app.get('*', routes.index(db.get('course')));
 
 http.createServer(app).listen(app.get('port'), function(){
   console.log('Express server listening on port ' + app.get('port'));
