@@ -1,0 +1,14 @@
+doctype html
+form(action= '/search.course', method= 'post')
+  input(name='course')
+  input(type='submit')
+if list
+  ul
+    each item in list
+      li
+        unless item.type
+          a(href='#{item.path}/#{item.name}/')= item.name + '/'
+        else
+          a(href='#{item.path}/#{item.name}')= item.name
+else
+  = url
