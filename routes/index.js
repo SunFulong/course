@@ -6,7 +6,6 @@ exports.index = function (course) {
     function query(p, name) {
       if (!name) {
         course.find({parent: p}, {sort: ['type', 'name']}).on('success', function (results) {
-          console.log(results);
           response.render('list', {list: results});
         });
 
