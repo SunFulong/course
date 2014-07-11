@@ -1,37 +1,57 @@
-exports.index = function (course) {
-  return function (request, response) {
-    var names = decodeURIComponent(request.url).substr(1).split('/'),
-      rootUrl;
+exports.index = function (db) {
+  var request, response, names;
+  var file_names, file_path, file_root, file_list;
 
-    function query(p, name) {
-      if (!name) {
-        course.find({parent: p}, {sort: ['type', 'name']}).on('success', function (results) {
-          response.render('list', {list: results});
-        });
+  function query_file_list(p, name, callback) {
+    if (!name) {
+      db.get('course').find({parent: p}, {sort: ['type', 'name']}).on('success', function (results) {
+        file_list = results;
+
+        callback();
+      });
+
+      return;
+    }
+
+    db.get('course').findOne({parent: p, name: name}).on('success', function (result) {
+      if (!result) {
+        response.status(404);
+        response.send('404 Not Found');
 
         return;
       }
 
-      course.findOne({parent: p, name: name}).on('success', function (result) {
-        if (!result) {
-          response.status(404);
-          response.send('404 Not Found');
+      if (!p) {
+        file_root = result.url;
+      }
+      if (!result.type) {
+        query_file_list(result._id, file_names.shift(), callback);
+        file_path.push({name: name, path: file_path[file_path.length - 1].path + name + '/'});
+      } else {
+        response.redirect(file_root + request.url.substr(1));
+      }
+    });
+  }
 
-          return;
-        }
+  function init_query_file_list() {
+    file_names = names;
+    file_path = [{name: '课件发布系统', path: '/'}];
 
-        if (!p) {
-          rootUrl = result.url;
-        }
-        if (!result.type) {
-          query(result._id, names.shift());
-        } else {
-          response.redirect(rootUrl + request.url.substr(1));
-        }
-      });
-    }
+    query_file_list(null, file_names.shift(), function () {
+      render_page(response);
+    });
+  }
 
-    query(null, names.shift());
+  function render_page(response) {
+    return response.render('list', {file_list: file_list, nav_list: file_path});
+  }
+
+  return function (req, res) {
+    request = req;
+    response = res;
+    names = decodeURIComponent(request.url).substr(1).split('/');
+
+    init_query_file_list();
   };
 };
 
